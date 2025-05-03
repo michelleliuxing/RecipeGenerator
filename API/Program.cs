@@ -1,5 +1,7 @@
 using Persistence;
 using Microsoft.EntityFrameworkCore;
+using Application.Pets.Queries;
+using Application.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,10 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
-    // opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddCors();
+builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<GetPetList.Handler>());
+builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 
 var app = builder.Build();
 

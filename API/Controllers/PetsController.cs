@@ -1,27 +1,47 @@
 using System;
+using Application.Pets.Commands;
+using Application.Pets.Queries;
 using Domain;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Persistence;
 
 namespace API.Controllers;
 
 // route prefix is api/pets because the controller is named PetsController.
-public class PetsController(AppDbContext context) : BaseApiController // Primary constructor
+public class PetsController: BaseApiController // Primary constructor
 {
     [HttpGet]
     public async Task<ActionResult<List<Pet>>> GetPets() // Returen an Http result
     {
-        return await context.Pets.ToListAsync(); // Always use Async when using database queries
+        // Use mediator send to send request to handler
+        return await Mediator.Send(new GetPetList.Query()); 
     } 
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Pet>> GetPetDetails(string id)
     {
-        var pet = await context.Pets.FindAsync(id);
+        return await Mediator.Send(new GetPetDetails.Query{Id = id});
+    }
 
-        if (pet == null) return NotFound(); // Returen NotFound as an ActionResult if pet not found with the id supplied
+    [HttpPost]
+    public async Task<ActionResult<string>> CreatePet(Pet pet)
+    {
+        return await Mediator.Send(new CreatePet.Command{Pet = pet});
+    }
 
-        return pet;
+    [HttpPut]
+    public async Task<ActionResult> EditPet(Pet pet)
+    {
+        await Mediator.Send(new EditPet.Command { Pet = pet });
+
+        return NoContent(); // Not returning anything but the request was ok
+    }
+
+    [HttpDelete("{Id}")]
+    public async Task<ActionResult> DeleteActivity(string id)
+    {
+        await Mediator.Send(new DeletePet.Command{Id = id});
+
+        return Ok();
     }
 }
