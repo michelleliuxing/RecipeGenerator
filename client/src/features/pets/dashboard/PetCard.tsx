@@ -1,4 +1,4 @@
-import { Avatar, Badge, Card, CardContent } from "@mui/material"
+import { Card, CardContent } from "@mui/material"
 
 type Props = {
     pet: Pet
