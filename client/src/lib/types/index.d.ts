@@ -1,8 +1,12 @@
 type Pet = {
     id: string
     name: string
-    age: number
-    specie: number
-    isDesexed: boolean
+    type: string
     breed: string
+    age: number
+    weight: number
+    activityLevel: string
+    healthIssues: string
+    imageUrl: string
+    isDesexed: boolean
 }

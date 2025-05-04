@@ -37,7 +37,6 @@ function ResponsiveAppBar() {
     }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {/* Left: Logo/Title */}
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
             <PetsIcon sx={{ display: { xs: 'none', md: 'flex' } }} />
             <Typography
