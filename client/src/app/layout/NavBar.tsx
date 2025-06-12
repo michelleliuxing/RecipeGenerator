@@ -15,16 +15,10 @@ const pages = ['Home', 'My Pets', 'Recipe'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
-
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -38,7 +32,7 @@ function ResponsiveAppBar() {
       <Container maxWidth="xl">
         <Toolbar disableGutters sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-            <PetsIcon sx={{ display: { xs: 'none', md: 'flex' } }} />
+            <PetsIcon sx={{ display: 'flex' }} />
             <Typography
               variant="h6"
               noWrap
@@ -51,6 +45,7 @@ function ResponsiveAppBar() {
                 letterSpacing: '.1rem',
                 color: 'inherit',
                 textDecoration: 'none',
+                display: { xs: 'none', md: 'flex' }
               }}
             >
               PetFoodGenius
@@ -62,7 +57,7 @@ function ResponsiveAppBar() {
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleCloseNavMenu}
+                onClick={handleCloseUserMenu}
                 sx={{ my: 2, color: 'white', display: 'flex', whiteSpace: 'nowrap', textTransform: 'none' }}
               >
                 {page}

@@ -6,7 +6,7 @@ type Props = {
 
 export default function PetCard({ pet }: Props) {
     return (
-        <Card sx={{borderRadius: 3}} className="transition w-[300px]">
+        <Card sx={{ borderRadius: 3 }} className="transition w-full">
             <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center">

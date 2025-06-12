@@ -6,14 +6,10 @@ type Props = {
 
 export default function PetList({ pets }: Props) {
     return (
-        <section className="py-12 bg-[#f4f1de]">
-        <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {pets.map((pet) => (
-                    <PetCard key={pet.id} pet={pet} />
-                ))}
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mx-auto max-w-7xl">
+            {pets.map((pet) => (
+                <PetCard key={pet.id} pet={pet} />
+            ))}
         </div>
-        </section>
     )
 }
