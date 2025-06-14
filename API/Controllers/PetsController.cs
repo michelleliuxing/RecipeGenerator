@@ -1,47 +1,87 @@
 using System;
-using Application.Pets.Commands;
-using Application.Pets.Queries;
 using Domain;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Persistence;
 
 namespace API.Controllers;
 
 // route prefix is api/pets because the controller is named PetsController.
-public class PetsController: BaseApiController // Primary constructor
+public class PetsController: BaseApiController
 {
-    [HttpGet]
-    public async Task<ActionResult<List<Pet>>> GetPets() // Returen an Http result
+    private readonly AppDbContext _context;
+
+    public PetsController(AppDbContext context)
     {
-        // Use mediator send to send request to handler
-        return await Mediator.Send(new GetPetList.Query()); 
+        _context = context;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<Pet>>> GetPets()
+    {
+        var pets = await _context.Pets.ToListAsync();
+        return Ok(pets);
     } 
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Pet>> GetPetDetails(string id)
     {
-        return await Mediator.Send(new GetPetDetails.Query{Id = id});
+        var pet = await _context.Pets.FindAsync(id);
+        
+        if (pet == null)
+            return NotFound($"Pet with ID {id} not found");
+            
+        return Ok(pet);
     }
 
     [HttpPost]
     public async Task<ActionResult<string>> CreatePet(Pet pet)
     {
-        return await Mediator.Send(new CreatePet.Command{Pet = pet});
+        // Generate new ID if not provided
+        if (string.IsNullOrEmpty(pet.Id))
+            pet.Id = Guid.NewGuid().ToString();
+
+        _context.Pets.Add(pet);
+        await _context.SaveChangesAsync();
+        
+        return Ok(pet.Id);
     }
 
     [HttpPut]
     public async Task<ActionResult> EditPet(Pet pet)
     {
-        await Mediator.Send(new EditPet.Command { Pet = pet });
+        var existingPet = await _context.Pets.FindAsync(pet.Id);
+        
+        if (existingPet == null)
+            return NotFound($"Pet with ID {pet.Id} not found");
 
-        return NoContent(); // Not returning anything but the request was ok
+        // Update properties
+        existingPet.Name = pet.Name;
+        existingPet.Type = pet.Type;
+        existingPet.Breed = pet.Breed;
+        existingPet.Age = pet.Age;
+        existingPet.Weight = pet.Weight;
+        existingPet.ActivityLevel = pet.ActivityLevel;
+        existingPet.HealthIssues = pet.HealthIssues;
+        existingPet.ImageUrl = pet.ImageUrl;
+        existingPet.IsDesexed = pet.IsDesexed;
+
+        await _context.SaveChangesAsync();
+        
+        return NoContent();
     }
 
-    [HttpDelete("{Id}")]
-    public async Task<ActionResult> DeleteActivity(string id)
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeletePet(string id)
     {
-        await Mediator.Send(new DeletePet.Command{Id = id});
+        var pet = await _context.Pets.FindAsync(id);
+        
+        if (pet == null)
+            return NotFound($"Pet with ID {id} not found");
 
+        _context.Pets.Remove(pet);
+        await _context.SaveChangesAsync();
+        
         return Ok();
     }
 }

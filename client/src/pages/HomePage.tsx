@@ -1,22 +1,63 @@
-import { Typography, Box, Fade, Paper, Chip } from "@mui/material";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Box, Container, Typography, Alert, Fade, Paper, Chip } from "@mui/material";
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import {
-    PageContainer,
-    LoadingSpinner,
-    ErrorMessage
-} from '../components';
-import { usePets } from '../hooks';
-import { COLORS, GRADIENTS, ANIMATIONS } from '../utils';
+import LoadingSpinner from "../shared/components/ui/LoadingSpinner";
 
 export default function HomePage() {
-    const { pets, loading, error } = usePets();
+    const [pets, setPets] = useState<Pet[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchPets = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await axios.get<Pet[]>('https://localhost:5001/api/pets');
+                setPets(response.data);
+            } catch (err) {
+                setError('Failed to load pets. Please try again later.');
+                console.error('Error fetching pets:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPets();
+    }, []);
 
     if (loading) {
-        return <LoadingSpinner fullScreen message="Loading your furry friends..." />;
+        return (
+            <LoadingSpinner message="Fetching your furry friends..." fullScreen />
+        );
     }
 
     if (error) {
-        return <ErrorMessage message={error} fullScreen />;
+        return (
+            <Box
+                sx={{
+                    minHeight: '100vh',
+                    background: 'linear-gradient(135deg, #f9dba8 0%, #fbf5eb 50%, #fef7e0 100%)',
+                    pt: { xs: '100px', md: '120px' },
+                    px: 2
+                }}
+            >
+                <Container maxWidth="md">
+                    <Alert
+                        severity="error"
+                        sx={{
+                            borderRadius: 3,
+                            background: 'rgba(255, 235, 238, 0.8)',
+                            border: '1px solid rgba(211, 47, 47, 0.2)',
+                            color: '#8B4513'
+                        }}
+                    >
+                        {error}
+                    </Alert>
+                </Container>
+            </Box>
+        );
     }
 
     return (
@@ -24,7 +65,7 @@ export default function HomePage() {
             {/* Hero Section */}
             <Box
                 sx={{
-                    background: GRADIENTS.background,
+                    background: 'linear-gradient(135deg, #f9dba8 0%, #fbf5eb 30%, rgb(249, 233, 201) 70%, #fef7e0 100%)',
                     position: 'relative',
                     py: { xs: 8, md: 12 },
                     overflow: 'hidden',
@@ -40,9 +81,12 @@ export default function HomePage() {
                         width: 60,
                         height: 60,
                         borderRadius: '50%',
-                        background: `rgba(210, 105, 30, 0.1)`,
+                        background: 'rgba(210, 105, 30, 0.1)',
                         animation: 'float 3s ease-in-out infinite',
-                        '@keyframes float': ANIMATIONS.float
+                        '@keyframes float': {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-15px)' }
+                        }
                     }}
                 />
                 <Box
@@ -70,7 +114,7 @@ export default function HomePage() {
                     }}
                 />
 
-                <PageContainer maxWidth="lg" withPadding={false}>
+                <Container maxWidth="lg">
                     <Fade in timeout={1000}>
                         <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
                             {/* Logo */}
@@ -84,7 +128,10 @@ export default function HomePage() {
                                         width: 'auto',
                                         filter: 'drop-shadow(0 4px 8px rgba(139, 69, 19, 0.2))',
                                         animation: 'gentle-bounce 2s ease-in-out infinite',
-                                        '@keyframes gentle-bounce': ANIMATIONS.gentleBounce
+                                        '@keyframes gentle-bounce': {
+                                            '0%, 100%': { transform: 'translateY(0px)' },
+                                            '50%': { transform: 'translateY(-5px)' }
+                                        }
                                     }}
                                 />
                             </Box>
@@ -97,7 +144,7 @@ export default function HomePage() {
                                     fontWeight: 1000,
                                     mb: 2,
                                     fontSize: { xs: '2.5rem', md: '4rem' },
-                                    background: GRADIENTS.primary,
+                                    background: 'linear-gradient(45deg, #D2691E 30%, #CD853F 90%)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
@@ -113,7 +160,7 @@ export default function HomePage() {
                                 variant="h5"
                                 sx={{
                                     mb: 6,
-                                    color: COLORS.brown,
+                                    color: '#8B4513',
                                     fontSize: { xs: '1.1rem', md: '1.4rem' },
                                     fontWeight: 400,
                                     maxWidth: 700,
@@ -146,12 +193,12 @@ export default function HomePage() {
                                             }
                                         }}
                                     >
-                                        <FavoriteIcon sx={{ mr: 2, fontSize: 24, color: COLORS.primary }} />
+                                        <FavoriteIcon sx={{ mr: 2, fontSize: 24, color: '#D2691E' }} />
                                         <Typography
                                             variant="h6"
                                             sx={{
                                                 fontWeight: 600,
-                                                color: COLORS.brown
+                                                color: '#8B4513'
                                             }}
                                         >
                                             {pets.length} Happy {pets.length === 1 ? 'Pet' : 'Pets'}
@@ -168,7 +215,7 @@ export default function HomePage() {
                                             label={feature}
                                             sx={{
                                                 background: 'rgba(255, 255, 255, 0.6)',
-                                                color: COLORS.brown,
+                                                color: '#8B4513',
                                                 fontWeight: 500,
                                                 px: 2,
                                                 py: 1,
@@ -185,7 +232,7 @@ export default function HomePage() {
                             </Box>
                         </Box>
                     </Fade>
-                </PageContainer>
+                </Container>
             </Box>
 
             {/* Welcome Content */}
@@ -193,14 +240,14 @@ export default function HomePage() {
                 background: 'linear-gradient(180deg, #fefcf3 0%, #f8f1e6 100%)',
                 py: 8
             }}>
-                <PageContainer maxWidth="lg" withPadding={false}>
+                <Container maxWidth="lg">
                     <Fade in timeout={1200}>
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography
                                 variant="h3"
                                 sx={{
                                     fontWeight: 700,
-                                    color: COLORS.brown,
+                                    color: '#8B4513',
                                     mb: 3,
                                     fontSize: { xs: '2rem', md: '2.5rem' }
                                 }}
@@ -210,7 +257,7 @@ export default function HomePage() {
                             <Typography
                                 variant="h6"
                                 sx={{
-                                    color: COLORS.brown,
+                                    color: '#8B4513',
                                     opacity: 0.8,
                                     maxWidth: 800,
                                     mx: 'auto',
@@ -223,7 +270,7 @@ export default function HomePage() {
                             </Typography>
                         </Box>
                     </Fade>
-                </PageContainer>
+                </Container>
             </Box>
 
             {/* Footer */}
@@ -235,7 +282,7 @@ export default function HomePage() {
                     textAlign: 'center'
                 }}
             >
-                <PageContainer maxWidth="lg" withPadding={false}>
+                <Container maxWidth="lg">
                     {/* Logo in footer */}
                     <Box sx={{ mb: 3 }}>
                         <Box
@@ -268,7 +315,7 @@ export default function HomePage() {
                     <Typography variant="body2" sx={{ opacity: 0.7 }}>
                         © 2025 PawfectBite. Spreading love, one recipe at a time.
                     </Typography>
-                </PageContainer>
+                </Container>
             </Box>
         </>
     );

@@ -1,130 +1,280 @@
-import { Typography, Box, Fade, Fab } from "@mui/material";
-import AddIcon from '@mui/icons-material/Add';
-import PetsIcon from '@mui/icons-material/Pets';
+import React, { useState, useEffect } from 'react';
 import {
-    PageContainer,
-    FloatingElements,
-    LoadingSpinner,
-    ErrorMessage,
-    PetCard,
-    PetStats,
-    EmptyState
-} from '../components';
-import { usePets } from '../hooks';
-import { COLORS, GRADIENTS } from '../utils';
-import type { Pet } from '../types';
+    Box,
+    Typography,
+    Fab
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import PetCard from '../features/pets/components/PetCard';
+import { Pet } from '../shared/types/pet.types';
+import { PageLayout, LoadingSpinner, ErrorAlert, EmptyState } from '../shared';
+
+// Mock data for development
+const mockPets: Pet[] = [
+    {
+        id: '1',
+        name: 'Buddy',
+        type: 'Dog',
+        breed: 'Golden Retriever',
+        age: 3,
+        weight: 25,
+        activityLevel: 'High',
+        healthIssues: 'None',
+        imageUrl: '/pets/dog1.jpg',
+        isDesexed: true,
+        healthStatus: 'healthy'
+    },
+    {
+        id: '2',
+        name: 'Whiskers',
+        type: 'Cat',
+        breed: 'Persian',
+        age: 2,
+        weight: 4,
+        activityLevel: 'Low',
+        healthIssues: 'Allergies',
+        imageUrl: '/pets/cat1.jpg',
+        isDesexed: true,
+        healthStatus: 'needs-attention'
+    },
+    {
+        id: '3',
+        name: 'Max',
+        type: 'Dog',
+        breed: 'German Shepherd',
+        age: 5,
+        weight: 30,
+        activityLevel: 'High',
+        healthIssues: 'None',
+        imageUrl: '/pets/dog2.jpg',
+        isDesexed: true,
+        healthStatus: 'healthy'
+    }
+];
 
 export default function MyPetsPage() {
-    const { pets, loading, error } = usePets();
+    const [pets, setPets] = useState<Pet[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    if (loading) {
-        return <LoadingSpinner fullScreen message="Loading your furry friends..." />;
-    }
+    useEffect(() => {
+        fetchPets();
+    }, []);
 
-    if (error) {
-        return <ErrorMessage message={error} fullScreen />;
-    }
+    const fetchPets = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-    const handleCreateRecipe = (pet: Pet) => {
-        // TODO: Navigate to recipe creation page
-        console.log('Creating recipe for:', pet.name);
+            // Try to fetch from .NET API first (via Vite proxy)
+            try {
+                console.log('Attempting to fetch pets from .NET API via proxy...');
+                const response = await fetch('/api/pets');
+
+                if (!response.ok) {
+                    throw new Error(`API responded with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                const petsWithStatus = data.map((pet: Pet) => ({
+                    ...pet,
+                    healthStatus: (pet.healthIssues === 'None' || pet.healthIssues === '') ? 'healthy' as const : 'needs-attention' as const
+                }));
+                setPets(petsWithStatus);
+            } catch (apiError) {
+                // If API fails, use mock data for development
+                console.log('API not available, using mock data for development. Error:', apiError);
+                const petsWithStatus = mockPets.map(pet => ({
+                    ...pet,
+                    healthStatus: (pet.healthIssues === 'None' || pet.healthIssues === '') ? 'healthy' as const : 'needs-attention' as const
+                }));
+                setPets(petsWithStatus);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleAddPet = () => {
-        // TODO: Open add pet modal/form
-        console.log('Add new pet');
+        // TODO: Implement add pet functionality
+        console.log('Add pet clicked');
     };
 
+    if (loading) {
+        return <LoadingSpinner message="Fetching your furry friends..." fullScreen />;
+    }
+
+    if (error) {
+        return (
+            <ErrorAlert
+                message={error}
+                onRetry={fetchPets}
+                fullScreen
+            />
+        );
+    }
+
     return (
-        <>
-            <FloatingElements />
-            <PageContainer>
-                {/* Header Section */}
-                <Fade in timeout={800}>
-                    <Box sx={{ textAlign: 'center', mb: 6 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 3 }}>
-                            <PetsIcon sx={{ fontSize: 50, color: COLORS.primary, mr: 2 }} />
-                            <Typography
-                                variant="h2"
-                                sx={{
-                                    fontWeight: 1000,
-                                    background: GRADIENTS.primary,
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    fontSize: { xs: '2.5rem', md: '3.5rem' }
-                                }}
-                            >
-                                My Purmily
-                            </Typography>
-                        </Box>
-
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                color: COLORS.brown,
-                                fontWeight: 400,
-                                maxWidth: 600,
-                                mx: 'auto',
-                                mb: 4
-                            }}
-                        >
-                            Meet your adorable companions and create pawsome recipes just for them! 🐾
-                        </Typography>
-
-                        {/* Stats Cards */}
-                        <PetStats petCount={pets.length} />
-                    </Box>
-                </Fade>
-
-                {/* Content */}
-                {pets.length === 0 ? (
-                    <EmptyState onAddPet={handleAddPet} />
-                ) : (
-                    <Fade in timeout={1200}>
-                        <Box sx={{
-                            display: 'grid',
-                            gridTemplateColumns: {
-                                xs: '1fr',
-                                sm: 'repeat(2, 1fr)',
-                                lg: 'repeat(3, 1fr)'
-                            },
-                            gap: 4
-                        }}>
-                            {pets.map((pet, index) => (
-                                <PetCard
-                                    key={pet.id}
-                                    pet={pet}
-                                    index={index}
-                                    onCreateRecipe={handleCreateRecipe}
-                                />
-                            ))}
-                        </Box>
-                    </Fade>
-                )}
-
-                {/* Floating Action Button */}
-                <Fab
-                    onClick={handleAddPet}
+        <PageLayout>
+            {/* Header Section */}
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+                <Box
                     sx={{
-                        position: 'fixed',
-                        bottom: 32,
-                        right: 32,
-                        background: GRADIENTS.primary,
-                        color: 'white',
-                        width: 64,
-                        height: 64,
-                        boxShadow: '0 8px 24px rgba(210, 105, 30, 0.4)',
-                        '&:hover': {
-                            background: GRADIENTS.primaryReverse,
-                            transform: 'scale(1.05)',
-                            boxShadow: '0 12px 32px rgba(210, 105, 30, 0.5)'
+                        fontSize: '4rem',
+                        mb: 2,
+                        animation: 'gentle-bounce 3s ease-in-out infinite',
+                        '@keyframes gentle-bounce': {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
                         }
                     }}
                 >
-                    <AddIcon sx={{ fontSize: 28 }} />
-                </Fab>
-            </PageContainer>
-        </>
+                    🐾
+                </Box>
+                <Typography
+                    variant="h3"
+                    sx={{
+                        color: '#8b6914',
+                        fontWeight: 700,
+                        mb: 2
+                    }}
+                >
+                    My Pets Dashboard
+                </Typography>
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: '#a67c00',
+                        maxWidth: '600px',
+                        mx: 'auto',
+                        lineHeight: 1.6
+                    }}
+                >
+                    Manage your furry friends and discover personalized recipes for their perfect nutrition
+                </Typography>
+            </Box>
+
+            {/* Stats Cards */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 6, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                    <Box
+                        sx={{
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '20px',
+                            p: 3,
+                            textAlign: 'center',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <Typography variant="h4" sx={{ color: '#d4a574', fontWeight: 700, mb: 1 }}>
+                            {pets.length}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#8b6914', fontWeight: 500 }}>
+                            Total Pets
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                    <Box
+                        sx={{
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '20px',
+                            p: 3,
+                            textAlign: 'center',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <Typography variant="h4" sx={{ color: '#d4a574', fontWeight: 700, mb: 1 }}>
+                            {pets.filter(pet => pet.healthStatus === 'healthy').length}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#8b6914', fontWeight: 500 }}>
+                            Healthy Pets
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{ flex: '1 1 200px', minWidth: 200 }}>
+                    <Box
+                        sx={{
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '20px',
+                            p: 3,
+                            textAlign: 'center',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <Typography variant="h4" sx={{ color: '#d4a574', fontWeight: 700, mb: 1 }}>
+                            12
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: '#8b6914', fontWeight: 500 }}>
+                            Recipes Generated
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* Pets Grid */}
+            {pets.length === 0 ? (
+                <EmptyState
+                    icon="🐕"
+                    title="No pets yet!"
+                    description="Add your first furry friend to get started with personalized pet nutrition recommendations."
+                    actionLabel="Add Your First Pet"
+                    onAction={handleAddPet}
+                    fullScreen
+                />
+            ) : (
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            lg: 'repeat(3, 1fr)'
+                        },
+                        gap: 3
+                    }}
+                >
+                    {pets.map((pet) => (
+                        <PetCard key={pet.id} pet={pet} />
+                    ))}
+                </Box>
+            )}
+
+            {/* Floating Action Button */}
+            <Fab
+                color="primary"
+                aria-label="add pet"
+                onClick={handleAddPet}
+                sx={{
+                    position: 'fixed',
+                    bottom: 32,
+                    right: 32,
+                    background: 'linear-gradient(45deg, #d4a574 30%, #e6c68a 90%)',
+                    color: 'white',
+                    width: 64,
+                    height: 64,
+                    boxShadow: '0 8px 25px rgba(212, 165, 116, 0.4)',
+                    '&:hover': {
+                        background: 'linear-gradient(45deg, #c19660 30%, #d4a574 90%)',
+                        transform: 'scale(1.1)',
+                        boxShadow: '0 12px 35px rgba(212, 165, 116, 0.5)'
+                    },
+                    transition: 'all 0.3s ease'
+                }}
+            >
+                <AddIcon sx={{ fontSize: '2rem' }} />
+            </Fab>
+        </PageLayout>
     );
 } 

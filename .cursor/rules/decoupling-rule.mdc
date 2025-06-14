@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+Follow the concept of Decoupling / modularise to make component reusable and easy uncderstanding. Follow industry standards when architecting the project structure.

@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,14 +9,7 @@ namespace API.Controllers
     [ApiController]
     public class BaseApiController : ControllerBase
     {
-        // Private field to hold the IMediator instance (nullable)
-        private IMediator? _mediator;
-
-        // Protected property to access the IMediator instance
-        // Uses lazy initialization: if _mediator is null, it retrieves IMediator from the DI container
-        // Throws an exception if IMediator is not available (should not happen if properly registered)
-        protected IMediator Mediator =>
-            _mediator ??= HttpContext.RequestServices.GetService<IMediator>()
-                ?? throw new InvalidOperationException("IMediator service is unavailable");
+        // Base controller for common functionality
+        // No longer using MediatR - using direct database operations instead
     }
 }
